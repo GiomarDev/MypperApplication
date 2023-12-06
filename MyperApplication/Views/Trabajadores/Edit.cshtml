@@ -1,0 +1,201 @@
+﻿@model MyperApplication.Models.Trabajadore
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Trabajadore</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="TipoDocumento" class="control-label"></label>
+                <input asp-for="TipoDocumento" class="form-control" maxlength="3" required/>
+                <span asp-validation-for="TipoDocumento" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="NumeroDocumento" class="control-label"></label>
+                <input asp-for="NumeroDocumento" class="form-control" maxlength="7" required/>
+                <span asp-validation-for="NumeroDocumento" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Nombres" class="control-label"></label>
+                <input asp-for="Nombres" class="form-control" maxlength="50" required/>
+                <span asp-validation-for="Nombres" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="margin-top: 0.8rem;margin-bottom: 0.8rem;">
+                    <label>
+                    <input type="radio" name="gender" value="M" id="maleRadio" @(Model.Sexo == "M" ? "checked" : "")> Masculino
+                    </label>
+                    <label>
+                    <input type="radio" name="gender" value="F" id="femaleRadio" @(Model.Sexo == "F" ? "checked" : "")> Femenino
+                    </label>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Departamento</label>
+                <select class="form-control" id="idDepartamento" required>
+                    <option value="" selected disabled>-- Seleccione --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Provincia</label>
+                <select class="form-control" id="idProvincia" required>
+                    <option value="" selected disabled>-- Cargando... --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Distrito</label>
+                <select class="form-control" id="idDistrito" required>
+                    <option value="" selected disabled>-- Cargando... --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+
+            <!--HIDDENS-->
+            <input hidden asp-for="Sexo" id="idSexo" />
+            <input hidden asp-for="IdDepartamento" id="idDepartamentoSelected" />
+            <input hidden asp-for="IdProvincia" id="IdProvinciaSelected" />
+            <input hidden asp-for="IdDistrito" id="IdDistritoSelected" />
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var lstDepartamento = @Html.Raw(Json.Serialize(ViewBag.lstDepartamento));
+        var departamentoSelect = $('#idDepartamento');
+        var lstProvincia = @Html.Raw(Json.Serialize(ViewBag.lstProvincia));
+        var provinciaSelect = $('#idProvincia');
+        var lstDistrito = @Html.Raw(Json.Serialize(ViewBag.lstDistrito));
+        var distritoSelect = $('#idDistrito');
+
+        var provinciaId = '@Model.IdProvincia';
+        var distritoId = '@Model.IdDistrito';
+        provinciaSelect.val(provinciaId);
+        distritoSelect.val(distritoId);
+
+        $.each(lstDepartamento, function (index, departamento) {
+            departamentoSelect.append($('<option>', {
+                value: departamento.value,
+                text: departamento.text
+            }));
+        });
+        var departamentoId = '@Model.IdDepartamento';
+        departamentoSelect.val(departamentoId);
+
+        $("#idDepartamentoSelected").val(departamentoId);
+        var filteredProvincias = lstProvincia.filter(function (provincia) {
+            return provincia.idDepartamento == departamentoId;
+        });
+
+        provinciaSelect.empty();
+        distritoSelect.empty();
+
+        $.each(filteredProvincias, function (index, provincia) {
+            if (index == 0) {
+                $("#IdProvinciaSelected").val(provinciaId);
+            }
+
+            provinciaSelect.append($('<option>', {
+                value: provincia.id,
+                text: provincia.nombre
+            }));
+        });
+
+        var filteredDistritos = lstDistrito.filter(function (distrito) {
+            return distrito.idProvincia == provinciaId;
+        });
+
+        $.each(filteredDistritos, function (index, distrito) {
+            distritoSelect.append($('<option>', {
+                value: distrito.id,
+                text: distrito.nombre
+            }));
+        });
+
+        $("#IdDistritoSelected").val(distritoId);
+        $("#idDistrito").val(distritoId);
+
+        departamentoSelect.on('change', function () {
+            var selectedDepartamento = parseInt($(this).val());
+            var provinciaId = 0;
+            $("#idDepartamentoSelected").val(selectedDepartamento);
+            var filteredProvincias = lstProvincia.filter(function (provincia) {
+                return provincia.idDepartamento == selectedDepartamento;
+            });
+
+            provinciaSelect.empty();
+            distritoSelect.empty();
+
+            $.each(filteredProvincias, function (index, provincia) {
+                if (index == 0) {
+                    provinciaId = provincia.id;
+                    $("#IdProvinciaSelected").val(provinciaId);
+                }
+
+                provinciaSelect.append($('<option>', {
+                    value: provincia.id,
+                    text: provincia.nombre
+                }));
+            });
+
+            var filteredDistritos = lstDistrito.filter(function (distrito) {
+                return distrito.idProvincia == provinciaId;
+            });
+
+            $.each(filteredDistritos, function (index, distrito) {
+                if (index == 0) {
+                    $("#IdDistritoSelected").val(distrito.id);
+                }
+                distritoSelect.append($('<option>', {
+                    value: distrito.id,
+                    text: distrito.nombre
+                }));
+            });
+        });
+
+        provinciaSelect.on('change', function () {
+            var selectedProvincia = parseInt($(this).val());
+            $("#IdProvinciaSelected").val(selectedProvincia);
+            var filteredDistritos = lstDistrito.filter(function (distrito) {
+                return distrito.idProvincia == selectedProvincia;
+            });
+
+            distritoSelect.empty();
+
+            $.each(filteredDistritos, function (index, distrito) {
+                distritoSelect.append($('<option>', {
+                    value: distrito.id,
+                    text: distrito.nombre
+                }));
+            });
+        });
+
+        distritoSelect.on('change', function () {
+            var selectedDistrito = parseInt($(this).val());
+            $("#IdDistritoSelected").val(selectedDistrito);
+        });
+
+        $('input[name="gender"]').on('change', function () {
+            $('input[name="gender"]').not(this).prop('checked', false);
+
+            var selectedGender = $('input[name="gender"]:checked');
+            $("#idSexo").val(selectedGender.val());
+        });
+    });
+</script>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
